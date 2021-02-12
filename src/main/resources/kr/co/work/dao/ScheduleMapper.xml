@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.work.dao.ScheduleDAO">
+	
+	<insert id="insert" parameterType="ScheduleVO">
+		insert into schedule (id, allDay, title, startDate, endDate , type, color, description) values (#{id}, #{allDay}, #{title}, #{startDate}, #{endDate}, #{type}, #{color}, #{description})
+	</insert>
+	
+	<select id="select" resultType="ScheduleVO">
+		select * from schedule
+	</select>
+	
+	<update id="update" parameterType="ScheduleVO">
+		update schedule set allDay=#{allDay}, title=#{title}, startDate=#{startDate}, endDate=#{endDate}, type=#{type}, color=#{color}, description=#{description} where id=#{id}
+	</update>
+	
+	<delete id="delete" parameterType="string">
+		delete from schedule where id=#{id}
+	</delete>
+	
+</mapper>

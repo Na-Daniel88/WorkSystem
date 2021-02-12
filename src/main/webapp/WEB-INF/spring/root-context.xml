@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- Root Context: defines shared resources visible to all other web components -->
+
+
+	<!-- 프로퍼티 파일 사용 -->
+	<context:property-placeholder
+		location="classpath:db.properties" />
+	<!-- 트랜젝션을 transactionManager를 이용하여 어노테이션으로 하겠다. -->
+	<tx:annotation-driven
+		transaction-manager="transactionManager" />
+
+	<!-- DB연결 -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${o.driver}" />
+		<property name="url" value="${o.url}" />
+		<property name="username" value="${o.username}" />
+		<property name="password" value="${o.password}" />
+	</bean>
+
+	<!-- Mybatis -->
+	<bean id="sqlSessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage" value="kr.co.work.vo" />
+		<property name="mapperLocations"
+			value="classpath:/kr/co/work/dao/*.xml" />
+	</bean>
+	
+	<!-- 이것을 등록하면 DaoImpl을 만들지 않고 인터페이스만 만들어도 된다. -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="kr.co.work.dao" />
+		<property name="sqlSessionFactoryBeanName"
+			value="sqlSessionFactory" />
+	</bean>
+	
+	<!-- 트랜젝션 관리자 추가 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 스프링 시크리트 암호화 객체 -->
+	<bean id="bcryptPasswordEncoder"
+		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+
+	<security:http use-expressions="true">
+		
+		<security:intercept-url pattern="/main" access="hasAnyRole('USER,ADMIN')" />
+		<security:intercept-url pattern="/notice" access="hasAnyRole('USER,ADMIN')" />
+		<security:intercept-url pattern="/schedule" access="hasAnyRole('USER,ADMIN')" />
+		<security:intercept-url  pattern="/searchMember**" access="hasAnyRole('USER,ADMIN')" />
+		<security:intercept-url pattern="/register**" access="hasAnyRole('ADMIN')" />
+		<security:form-login 	login-page="/login"
+								default-target-url="/main"
+								username-parameter="userid"
+								password-parameter="password"
+								authentication-success-handler-ref="loginSuccessHandler" />
+		<security:logout />
+	</security:http> 
+	
+	
+	<!-- 로그인 성공시 세션에 회원 정보 등록 -->
+	<bean id="loginSuccessHandler"
+		class="kr.co.work.service.LoginSuccessHandler">
+		<property name="successUrl" value="main" />
+	</bean>
+
+	<!-- provider -->
+	<security:authentication-manager>
+		<security:authentication-provider>
+		<security:jdbc-user-service data-source-ref="dataSource"
+									users-by-username-query="select userid as username, password, enabled from member where userid=?"
+									authorities-by-username-query="select userid as username, role from member_roles where userid=?" />
+		<!-- 암호화해서 저장했을 경우 반드시 추가해야 한다.					  -->
+			<security:password-encoder ref="bcryptPasswordEncoder"/>				
+<!-- 
+			<security:user-service>
+				<security:user name="root" password="$2a$10$jn7Lr6102L26d61hdYVOo.czLS5sZhJ.8pNEUvJyZpi8drhkObKH2" authorities="ROLE_ADMIN" />
+			</security:user-service>
+ -->
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+</beans>
+
+

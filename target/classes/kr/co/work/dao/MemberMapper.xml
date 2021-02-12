@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.work.dao.MemberDAO">
+
+	<select id="memberCount" resultType="int">
+		select count(*) from member
+	</select>
+	
+	<select id="nameCount" parameterType="string" resultType="int">
+		select count(*) from member where name LIKE '%'||#{name}||'%'
+	</select>
+	
+	<!-- 1페이지 얻기 -->
+	<select id="selectList" parameterType="HashMap" resultType="MemberVO">
+		SELECT q.*	FROM (SELECT rownum rnum, r.* FROM (select * from member order by userid asc) r WHERE <![CDATA[ rownum <= #{endNo} ) q ]]> where <![CDATA[ rnum >= #{startNo} ]]>
+	</select>
+	
+	<select id="selectUserForPassword"  parameterType="string" resultType="MemberVO">
+		select * from member where userid = #{userid}
+	</select>
+	
+	<select id="selectByUserId"  parameterType="string" resultType="MemberVO">
+		select * from viewmember where userid = #{userid}
+	</select>
+	<select id="selectByName"  parameterType="HashMap" resultType="MemberVO">
+		SELECT q.*	FROM (SELECT rownum rnum, r.* FROM (select * from member WHERE name LIKE '%'||'${name}'||'%' order by userid asc) r WHERE <![CDATA[ rownum <= #{endNo} ) q ]]> where <![CDATA[ rnum >= #{startNo} ]]>
+	</select>
+
+	<select id="selectRole" parameterType="string" resultType="MemberRoleVO">
+		select * from member_roles where userid=#{userid}
+	</select>
+	<select id="selectRoleById" parameterType="string" resultType="MemberRoleVO">
+		select * from member_roles where userid=#{userid}
+	</select>
+	
+	<select id="selectAllMember" resultType="MemberVO">
+		SELECT * FROM member
+	</select>
+	
+	<select id="findUserid" parameterType="MemberVO" resultType="string">
+		select userid from member where name = #{name} and phone = #{phone}
+	</select>
+	
+	<update id="findPassword" parameterType="HashMap">
+		update member set password = #{password} where userid = #{userid}
+	</update>
+	
+	<insert id="insert" parameterType="MemberVO">
+		insert into member (userid, password, name, phone, birth, gender, dept, lvl, postCode, addr1, addr2, exAddr, regDate, enabled)
+		values (#{userid}, #{password}, #{name}, #{phone}, #{birth}, #{gender}, #{dept}, #{lvl}, #{postCode}, #{addr1}, #{addr2},#{exAddr}, #{regDate}, #{enabled})
+	</insert>
+	
+	<insert id="insertRole" parameterType="MemberRoleVO">
+		insert into member_roles (role_idx, userid, role) values (member_role_idx_seq.nextval, #{userid}, #{role})
+	</insert>
+	
+	<update id="update" parameterType="MemberVO">
+		update member set phone = #{phone}, dept = #{dept}, lvl = #{lvl}, postCode = #{postCode}, addr1 = #{addr1}, addr2 = #{addr2}, exAddr = #{exAddr}, enabled = #{enabled} where userid = #{userid}
+	</update>
+	<update id="updatePassword" parameterType="MemberVO">
+		update member set phone = #{phone}, password = #{password}, dept = #{dept}, lvl = #{lvl}, postCode = #{postCode}, addr1 = #{addr1}, addr2 = #{addr2}, exAddr = #{exAddr}, enabled = #{enabled} where userid = #{userid}
+	</update>
+	
+	<update id="updateRole" parameterType="MemberRoleVO">
+		update member_roles set role = #{role} where userid = #{userid}
+	</update>
+	
+	<delete id="delete" parameterType="string">
+		delete from member where userid = #{userid}
+	</delete>
+
+	<delete id="deleteRole" parameterType="string">
+		delete from member_roles where userid = #{userid}
+	</delete>
+</mapper>

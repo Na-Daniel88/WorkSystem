@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.work.dao.BoardDAO">
+
+	<select id="BoardCount" resultType="int">
+		select count(*) from board
+	</select>
+	
+	<!-- 1. IDX 최대값 얻기 -->
+	<select id="selectMaxIdx" resultType="int">
+		select max(idx) from board
+	</select>
+	
+	<!-- 2. 1개 얻기 -->
+	<select id="selectByIdx" parameterType="int" resultType="BoardVO">
+		select * from board where idx=#{idx}
+	</select>
+	
+	<!-- 검색 카운트 -->
+	 <select id="searchCount" resultType="int" parameterType="HashMap">
+		select count(*) from board
+					<where>
+						<if test="search_content!=null">
+							<if test="search_field=='all'">
+								title like '%'||#{search_content}||'%'
+								or content like '%'||#{search_content}||'%'
+							</if>
+							<if test="search_field!='all'">
+								${search_field} like '%'||#{search_content}||'%'
+							</if>
+						</if>
+					</where>
+	</select>
+	
+	<!-- 1페이지 얻기 -->
+	<select id="boardList" parameterType="HashMap" resultType="BoardVO">
+		SELECT
+			q.*	
+		FROM 
+			(SELECT
+				rownum rnum, r.*
+			FROM
+				(select * from board
+					<where>
+						<if test="search_content!=null">
+							<if test="search_field=='all'">
+								title like '%'||#{search_content}||'%'
+								or content like '%'||#{search_content}||'%'
+								or writer like '%'||#{search_content}||'%'
+							</if>
+							<if test="search_field!='all'">
+								${search_field} like '%'||#{search_content}||'%'
+							</if>
+						</if>
+					</where>
+				order by idx desc) r
+			WHERE
+			<![CDATA[ rownum <= #{endNo} ) q ]]> 
+		where
+			<![CDATA[ rnum >= #{startNo} ]]>
+	</select>
+	
+	<!-- 4. 저장하기 -->
+	<insert id="boardInsert" parameterType="BoardVO">
+		insert into board
+			(idx, title, content, userid, writer, boardDate)
+		values
+			(BOARD_idx_seq.nextval, #{title}, #{content}, #{userid}, #{writer}, SYSDATE)
+	</insert>
+	
+	<!-- 5. 수정하기 -->
+	<update id="boardUpdate" parameterType="BoardVO">
+		update 
+			board
+		set
+			title = #{title}, content=#{content}, boardDate=SYSDATE
+		where
+			idx=#{idx}
+	</update>
+	
+	<!-- 6. 삭제하기 -->
+	<delete id="boardDelete" parameterType="int">
+		delete from board where idx=#{idx}
+	</delete>
+
+</mapper>
